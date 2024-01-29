@@ -19,19 +19,30 @@ function Select-GitRepository {
         Pop-Location
     } | Sort-Object LastModified -Descending | Select-Object -First 5
 
-    # Display repositories
-    $index = 0
-    $repositories | ForEach-Object {
-        Write-Host ("[{0}] {1, -50} {2, -20}" -f ++$index, $_.Path, $_.LastModified)
+    function Display-Repositories($selectedIndex) {
+        Clear-Host
+        for ($i = 0; $i -lt $repositories.Count; $i++) {
+            if ($i -eq $selectedIndex) {
+                Write-Host ("-> [{0}] {1, -50} {2, -20}" -f ($i + 1), $repositories[$i].Path, $repositories[$i].LastModified) -ForegroundColor Cyan
+            } else {
+                Write-Host ("   [{0}] {1, -50} {2, -20}" -f ($i + 1), $repositories[$i].Path, $repositories[$i].LastModified)
+            }
+        }
     }
 
-    # Repository selection
-    $selection = Read-Host "Select a repository by number (1-$index)"
-    if ($selection -ge 1 -and $selection -le $index) {
-        $selectedRepo = $repositories[$selection - 1]
-        Set-Location -Path $selectedRepo.Path
-        Write-Host "Changed directory to: $($selectedRepo.Path)"
-    } else {
-        Write-Host "Invalid selection."
-    }
+    $selectedIndex = 0
+    $keyInfo = $null
+    do {
+        Display-Repositories $selectedIndex
+        $keyInfo = $host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
+        switch ($keyInfo.VirtualKeyCode) {
+            38 { if ($selectedIndex -gt 0) { $selectedIndex-- } } # Up arrow
+            40 { if ($selectedIndex -lt $repositories.Count - 1) { $selectedIndex++ } } # Down arrow
+        }
+        if ($keyInfo.Character -eq [char]13) { break } # Enter key
+    } while ($true)
+
+    $selectedRepo = $repositories[$selectedIndex]
+    Set-Location -Path $selectedRepo.Path
+    Write-Host "Changed directory to: $($selectedRepo.Path)" -ForegroundColor Green
 }
