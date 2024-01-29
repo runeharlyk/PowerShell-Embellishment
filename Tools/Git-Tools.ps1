@@ -7,19 +7,33 @@ function Get-Repositories {
     $allDirs = Get-ChildItem -Path $BasePath -Directory -Recurse -Depth $Depth
     Write-Host "Checking $($allDirs.Count) directories..."
 
-    $repositories = $allDirs | ForEach-Object -Parallel {
+    $repositories = @()
+    $allDirs | ForEach-Object {
         $path = $_.FullName
         Push-Location -Path $path
         $isGitRepo = git rev-parse --is-inside-work-tree 2>$null
         if ($isGitRepo -eq 'true') {
-            [PSCustomObject]@{
-                Path = $path
-                LastModified = (Get-Item $path).LastWriteTime
+            $repoRoot = git rev-parse --show-toplevel
+
+            if (-not ($repositories.Path -contains $repoRoot)) {
+                $repositories += [PSCustomObject]@{
+                    Path = $repoRoot
+                    LastModified = (Get-Item $repoRoot).LastWriteTime
+                }
             }
         }
         Pop-Location
-    } | Sort-Object LastModified -Descending | Select-Object -First $Top
-    return $repositories
+    }
+
+    return $repositories | Sort-Object LastModified -Descending | Select-Object -First $Top
+}
+
+function Time-Repos {
+    $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
+    Get-Repositories
+
+    $stopwatch.Stop()
+    Write-Host "Time taken: $($stopwatch.Elapsed)"
 }
 
 function Select-GitRepository {
