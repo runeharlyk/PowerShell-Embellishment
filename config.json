@@ -28,7 +28,7 @@
             "type": "path"
           },
           {
-            "foreground": "#FFE700",
+            "foreground": "#00ffdd",
             "style": "plain",
             "template": "{{ .HEAD }} ",
             "type": "git"
