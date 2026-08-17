@@ -10,16 +10,23 @@
 
   .PARAMETER RepositoriesRootPath
     Specify the root path where git repositories are located.
+
+  .NOTES
+    The defaults read the calling profile's global variables, so the script also works when it is
+    dot-sourced or imported without arguments. They cannot be resolved in the body instead:
+    dot-sourcing runs the param block in the caller's scope, where binding an unsupplied parameter
+    overwrites the caller's variable of the same name with $null before the body ever runs.
 #>
 param(
-  $StartupPath,
-  [string[]]$AutoAliasPaths = @(),
-  $RepositoriesRootPath
+  $StartupPath = $Global:StartupPath,
+  [string[]]$AutoAliasPaths = $Global:AutoAliasPaths,
+  $RepositoriesRootPath = $Global:RepositoriesRootPath
 )
 
-$RepositoriesRootPath = 'C:\data'
+. $PSScriptRoot\Tools\Helpers.ps1
 
-Import-Module $PSScriptRoot\Tools\Helpers.ps1 
+Set-RepositoryRootPath -Path $RepositoriesRootPath
+
 
 #################################################
 ### Configure Env and global variables        ###
@@ -30,7 +37,7 @@ Import-Module $PSScriptRoot\Tools\Helpers.ps1
 if (!$Env:LC_ALL) { $Env:LC_ALL = 'en_DK.UTF8' }
 # Disable telemetry by dotnet CLI.
 $Env:DOTNET_CLI_TELEMETRY_OPTOUT = 1
-# Set encoding for console input and output to UTF8, which is typically used by native tools. (UTF8 is defailt in PWSH)
+# Set encoding for console input and output to UTF8, which is typically used by native tools. (UTF8 is default in PWSH)
 [Console]::InputEncoding = [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
 
@@ -43,34 +50,33 @@ Set-AliasIfValid -Name 'npp' -Command "$Env:ProgramFiles\Notepad++\notepad++.exe
 Set-AliasIfValid -Name '7z' -Command "$Env:ProgramFiles\7-Zip\7z.exe"
 Set-Alias -Name '..' -Value Set-ParentLocation -Scope Global -Force
 Set-Alias -Name 'r' -Value Set-RepositoryLocation -Scope Global -Force
+Set-Alias -Name '<' -Value Get-Content -Scope Global -Force
+
+Import-AutoAliases -Path $AutoAliasPaths
 
 
 #################################################
 ### Configure look and feel                   ###
 #################################################
 
-Initialize-OhMyPosh
+# oh-my-posh renders the prompt, so PSReadLine is configured afterwards to keep the settings below.
+Initialize-OhMyPosh -ConfigPath $PSScriptRoot\config.json
 Initialize-PSReadLine
-Initialize-PoshGit
-Import-ModuleSafe -Name Terminal-Icons -MinimumVersion 0.11.0 | Out-Null
+Initialize-TerminalIcons
 
 
 #################################################
 ### Register argument and tab completers      ###
 #################################################
 
-Initialize-RepositoryCompleter $RepositoriesRootPath
+Initialize-PoshGit
 Initialize-DotnetCompleter
-
-# CompletionPredictor module provides IntelliSense and auto-completion for almost anything that can be tab-completed
-#Import-ModuleSafe -Name CompletionPredictor | Out-Null
+if ($RepositoriesRootPath) { Initialize-RepositoryCompleter -RepositoriesRootPath $RepositoriesRootPath }
 
 
 #################################################
 ### Cleanup                                   ###
 #################################################
-
-Remove-Item Function:\Import-ModuleSafe -ErrorAction SilentlyContinue
 
 # Change the startup location, if specified and current location is the default.
 if ($StartupPath -and $PWD.Path -eq $Env:USERPROFILE) {
