@@ -1,47 +1,55 @@
 {
-    "$schema": "https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/schema.json",
-    "blocks": [
-      {
-        "segments": [
-          {
-            "foreground": "#00C5C7",
-            "properties": {
-              "time_format": "15:04:05"
-            },
-            "style": "plain",
-            "template": " {{ .CurrentDate | date .Format }} ",
-            "type": "time"
-          }
-        ],
-        "type": "rprompt"
-      },
-      {
-        "alignment": "left",
-        "segments": [
-          {
-            "foreground": "#77E4F7",
-            "properties": {
-              "style": "full"
-            },
-            "style": "plain",
-            "template": "{{ .Path }} ",
-            "type": "path"
+  "$schema": "https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/schema.json",
+  "blocks": [
+    {
+      "type": "rprompt",
+      "segments": [
+        {
+          "properties": {
+            "cache_duration": "none",
+            "time_format": "15:04:05"
           },
-          {
-            "foreground": "#00ffdd",
-            "style": "plain",
-            "template": "{{ .HEAD }} ",
-            "type": "git"
+          "template": " {{ .CurrentDate | date .Format }} ",
+          "foreground": "#00C5C7",
+          "type": "time",
+          "style": "plain"
+        }
+      ]
+    },
+    {
+      "type": "prompt",
+      "alignment": "left",
+      "segments": [
+        {
+          "properties": {
+            "cache_duration": "none",
+            "style": "full"
           },
-          {
-            "foreground": "#43D426",
-            "style": "plain",
-            "template": "\u276f ",
-            "type": "text"
-          }
-        ],
-        "type": "prompt"
-      }
-    ],
-    "version": 2
-  }
+          "template": "{{ .Path }} ",
+          "foreground": "#77E4F7",
+          "type": "path",
+          "style": "plain"
+        },
+        {
+          "properties": {
+            "cache_duration": "none"
+          },
+          "template": "{{ .HEAD }} ",
+          "foreground": "#00ffdd",
+          "type": "git",
+          "style": "plain"
+        },
+        {
+          "properties": {
+            "cache_duration": "none"
+          },
+          "template": "❯ ",
+          "foreground": "#43D426",
+          "type": "text",
+          "style": "plain"
+        }
+      ]
+    }
+  ],
+  "version": 3
+}
